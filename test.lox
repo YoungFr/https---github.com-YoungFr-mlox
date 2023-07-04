@@ -11,3 +11,10 @@ multiple line
 string";
 
 print e;
+
+var e = "e"; var f = 1 < 2; var g = 23 != 34;
+print e; print f;
+print g;
+
+var h = 1 < (2 - 3) * (9 - 7);
+print h;
