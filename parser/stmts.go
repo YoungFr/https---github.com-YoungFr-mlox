@@ -12,9 +12,10 @@ type StmtVisitor interface {
 	VisitorPrintStmt(*Print) any
 	VisitorExpressionStmt(*Expression) any
 	VisitorVarStmt(*Var) any
+	VisitorBlockStmt(*Block) any
 }
 
-/* >>>>>>>>>>>>>>>>>>>> print statement >>>>>>>>>>>>>>>>>>>> */
+// >>>>>>>>>>>>>>>>>>>> print statement >>>>>>>>>>>>>>>>>>>>
 
 type Print struct {
 	Expression Expr `json:"printstmt_expr"`
@@ -31,9 +32,9 @@ func NewPrint(expression Expr) *Print {
 // print !true;
 var _ = Stmt(NewPrint(NewUnary(token.NewToken(token.NOT, "!", nil, 1), NewLiteral(true))))
 
-/* <<<<<<<<<<<<<<<<<<<< print statement <<<<<<<<<<<<<<<<<<<< */
+// <<<<<<<<<<<<<<<<<<<< print statement <<<<<<<<<<<<<<<<<<<<
 
-/* >>>>>>>>>>>>>>>>>>>> expression statement >>>>>>>>>>>>>>>>>>>> */
+// >>>>>>>>>>>>>>>>>>>> expression statement >>>>>>>>>>>>>>>>>>>>
 
 type Expression struct {
 	ExprStmtExpr Expr `json:"exprstmt_expr"`
@@ -50,9 +51,9 @@ func NewExpression(expression Expr) *Expression {
 // -5;
 var _ = Stmt(NewExpression(NewUnary(token.NewToken(token.SUB, "-", nil, 1), NewLiteral((5)))))
 
-/* <<<<<<<<<<<<<<<<<<<< expression statement <<<<<<<<<<<<<<<<<<<< */
+// <<<<<<<<<<<<<<<<<<<< expression statement <<<<<<<<<<<<<<<<<<<<
 
-/* >>>>>>>>>>>>>>>>>>>> variable declaration statement >>>>>>>>>>>>>>>>>>>> */
+// >>>>>>>>>>>>>>>>>>>> variable declaration statement >>>>>>>>>>>>>>>>>>>>
 
 type Var struct {
 	Name        token.Token `json:"variable_name"`
@@ -73,4 +74,31 @@ func NewVar(name token.Token, initializer Expr) *Var {
 // var a = 5;
 var _ = Stmt(NewVar(token.NewToken(token.IDE, "a", nil, 1), NewLiteral(5)))
 
-/* <<<<<<<<<<<<<<<<<<<< variable declaration statement <<<<<<<<<<<<<<<<<<<< */
+// <<<<<<<<<<<<<<<<<<<< variable declaration statement <<<<<<<<<<<<<<<<<<<<
+
+// >>>>>>>>>>>>>>>>>>>> block statement >>>>>>>>>>>>>>>>>>>>
+
+type Block struct {
+	Statements []Stmt `json:"block_statements"`
+}
+
+func (b *Block) Accept(sv StmtVisitor) any {
+	return sv.VisitorBlockStmt(b)
+}
+
+func NewBlock(statements []Stmt) *Block {
+	ss := make([]Stmt, len(statements))
+	copy(ss, statements)
+	return &Block{Statements: ss}
+}
+
+// {
+//     var a = 1;
+// 	   print a;
+// }
+var _ = Stmt(NewBlock([]Stmt{
+	Stmt(NewVar(token.NewToken(token.IDE, "a", nil, 1), NewLiteral(1))),
+	Stmt(NewPrint(Expr(NewVariable(token.NewToken(token.IDE, "a", nil, 2))))),
+}))
+
+// <<<<<<<<<<<<<<<<<<<< block statement <<<<<<<<<<<<<<<<<<<<

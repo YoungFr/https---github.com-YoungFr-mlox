@@ -16,6 +16,7 @@ type ExprVisitor interface {
 	VisitorBinaryExpr(*Binary) any
 	VisitorGroupExpr(*Group) any
 	VisitorVariableExpr(*Variable) any
+	VisitorAssignExpr(*Assign) any
 }
 
 // >>>>>>>>>>>>>>>>>>>> literal expression >>>>>>>>>>>>>>>>>>>>
@@ -134,3 +135,26 @@ func NewVariable(name token.Token) *Variable {
 var _ = Expr(NewVariable(token.NewToken(token.IDE, "a_variable", nil, 1)))
 
 // <<<<<<<<<<<<<<<<<<<< variable expression <<<<<<<<<<<<<<<<<<<<
+
+// >>>>>>>>>>>>>>>>>>>> assign expression >>>>>>>>>>>>>>>>>>>>
+
+type Assign struct {
+	Name  token.Token `json:"assign_name"`
+	Value Expr        `json:"assign_value"`
+}
+
+func (a *Assign) Accept(ev ExprVisitor) any {
+	return ev.VisitorAssignExpr(a)
+}
+
+func NewAssign(name token.Token, value Expr) *Assign {
+	return &Assign{
+		Name:  name,
+		Value: value,
+	}
+}
+
+// a = 5
+var _ = Expr(NewAssign(token.NewToken(token.IDE, "a", nil, 1), NewLiteral(5)))
+
+// <<<<<<<<<<<<<<<<<<<< assign expression <<<<<<<<<<<<<<<<<<<<

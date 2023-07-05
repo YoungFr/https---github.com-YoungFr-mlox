@@ -55,6 +55,7 @@ loop:
 		default:
 			tokens, _ := scanner.NewScanner(line).ScanTokens()
 			stmts := parser.NewParser(tokens).Parse()
+			// parser.PrintAST(stmts)
 			ir.Interpret(stmts)
 			fmt.Print(">>> ")
 		}

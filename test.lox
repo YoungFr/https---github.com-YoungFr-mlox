@@ -1,20 +1,19 @@
-var a = 1 + 1;
-var b = 2;
-print a;
-print b;
-var c = "a" + " string";
-var d = 23 * (32 - (3 + (25 / 5)));
-print c; print d;
-
-var e = "a 
-multiple line
-string";
-
-print e;
-
-var e = "e"; var f = 1 < 2; var g = 23 != 34;
-print e; print f;
-print g;
-
-var h = 1 < (2 - 3) * (9 - 7);
-print h;
+var a = "global a";
+var b = "global b";
+var c = "global c";
+{
+    var a = "outer a";
+    var b = "outer b";
+    {
+        var a = "inner a";
+        print a; // inner a
+        print b; // outer b
+        print c; // global c
+    }
+    print a; // outer a
+    print b; // outer b
+    print c; // global c
+}
+print a; // global a
+print b; // global b
+print c; // global c

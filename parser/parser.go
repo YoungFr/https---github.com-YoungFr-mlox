@@ -29,6 +29,7 @@ func (p *Parser) Parse() []Stmt {
 	return statements
 }
 
+// declaration -> varDecl | statement ;
 func (p *Parser) decl() Stmt {
 	// a variable declaration statement
 	if p.match(token.VAR) {
@@ -38,6 +39,7 @@ func (p *Parser) decl() Stmt {
 	return p.statement()
 }
 
+// varDecl -> "var" IDENTIFIER ( "=" expression )? ";" ;
 func (p *Parser) varDecl() Stmt {
 	// variable's name
 	var name token.Token
@@ -56,13 +58,20 @@ func (p *Parser) varDecl() Stmt {
 	return NewVar(name, initializer)
 }
 
+// statement -> exprStmt | printStmt | block ;
 func (p *Parser) statement() Stmt {
+	// print -> printStmt
 	if p.match(token.PRINT) {
 		return p.printStatement()
+	}
+	// { -> block
+	if p.match(token.LBRACE) {
+		return NewBlock(p.block())
 	}
 	return p.expressionStatement()
 }
 
+// printStmt -> "print" expression ";" ;
 func (p *Parser) printStatement() Stmt {
 	value := p.expression()
 	// terminated semicolon
@@ -72,6 +81,19 @@ func (p *Parser) printStatement() Stmt {
 	return NewPrint(value)
 }
 
+// block -> "{" declaration* "}" ;
+func (p *Parser) block() []Stmt {
+	statements := make([]Stmt, 0)
+	for !p.check(token.RBRACE) && !p.isAtEnd() {
+		statements = append(statements, p.decl())
+	}
+	if p.check(token.RBRACE) {
+		p.advance()
+	} // else -> error: expect '}' after block statement
+	return statements
+}
+
+// exprStmt -> expression ";" ;
 func (p *Parser) expressionStatement() Stmt {
 	value := p.expression()
 	// terminated semicolon
@@ -81,11 +103,27 @@ func (p *Parser) expressionStatement() Stmt {
 	return NewExpression(value)
 }
 
+// expression -> assignment
 func (p *Parser) expression() Expr {
-	return p.equality()
+	return p.assignment()
+}
+
+// assignment -> IDENTIFIER "=" assignment | equality ;
+func (p *Parser) assignment() Expr {
+	expr := p.equality()
+	if p.match(token.ASG) {
+		// assignmentTarget := p.prev()
+		value := p.assignment()
+		if variableExpr, ok := expr.(*Variable); ok {
+			name := variableExpr.Name
+			return NewAssign(name, value)
+		} // else -> error: invalid assignment target.
+	}
+	return expr
 }
 
 // >>>>>>>>>>>>>>> helper functions >>>>>>>>>>>>>>>
+
 func (p *Parser) peek() token.Token {
 	return p.tokens[p.current]
 }
@@ -121,6 +159,7 @@ func (p *Parser) match(ttypes ...token.TokenType) bool {
 	}
 	return false
 }
+
 // <<<<<<<<<<<<<<< helper functions <<<<<<<<<<<<<<<
 
 // equality -> comparison ( ( "!=" | "==" ) comparison )? ;

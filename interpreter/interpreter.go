@@ -13,9 +13,7 @@ type Interpreter struct {
 
 func NewInterpreter() *Interpreter {
 	return &Interpreter{
-		env: &environment{
-			values: make(map[string]any),
-		},
+		env: NewEnvironment(nil),
 	}
 }
 
@@ -30,7 +28,7 @@ func (i *Interpreter) exec(stmt parser.Stmt) {
 	stmt.Accept(i)
 }
 
-// The *Interpreter implements the StmtVisitor interface.
+// The *Interpreter should implement the StmtVisitor interface.
 var _ = parser.StmtVisitor(NewInterpreter())
 
 // The implementation of the StmtVisitor interface.
@@ -59,15 +57,31 @@ func (i *Interpreter) VisitorVarStmt(v *parser.Var) any {
 	return nil
 }
 
+func (i *Interpreter) VisitorBlockStmt(b *parser.Block) any {
+	i.execBlock(b.Statements, NewEnvironment(i.env))
+	return nil
+}
+
+func (i *Interpreter) execBlock(statements []parser.Stmt, env *environment) {
+	prevEnv := i.env
+	defer func() {
+		i.env = prevEnv
+	}()
+	i.env = env
+	for _, statement := range statements {
+		i.exec(statement)
+	}
+}
+
 // evaluating expression
 func (i *Interpreter) eval(expr parser.Expr) any {
 	return expr.Accept(i)
 }
 
-// The *Interpreter implements the ExprVisitor interface.
+// The *Interpreter should implement the ExprVisitor interface.
 var _ = parser.ExprVisitor(NewInterpreter())
 
-// The implementation of the StmtVisitor interface.
+// The implementation of the ExprVisitor interface.
 
 func (i *Interpreter) VisitorLiteralExpr(l *parser.Literal) any {
 	// literal expression like `1` `true` `"str"` ...
@@ -215,4 +229,10 @@ func (i *Interpreter) VisitorGroupExpr(g *parser.Group) any {
 func (i *Interpreter) VisitorVariableExpr(v *parser.Variable) any {
 	// variable expression like `a` `ans` `s` `res` ...
 	return i.env.get(v.Name)
+}
+
+func (i *Interpreter) VisitorAssignExpr(a *parser.Assign) any {
+	value := i.eval(a.Value)
+	i.env.asg(a.Name, value)
+	return value
 }
