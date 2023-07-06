@@ -1,3 +1,39 @@
+// literal expression
+print "string"; // string
+
+// unary expression
+print --1; // 1
+print !!!false; // true
+
+// binary expression
+print 5 + 5; // 10
+print 5 - 5; // 0
+print 5 * 5; // 25
+print 5 / 5; // 1
+print 1 < 1; // false
+print 1 <= 1; // true
+print 2 > 3; // false
+print 1 >= 1; // true
+print "a" == "b"; // false
+print "a" != "b"; // true
+
+// group expression
+print 2 * ((3 - 1) * (5 / (3 - 1))); // 10
+
+// variable declaration statement
+var v1 = 1;
+var v2 = "a";
+print v1; // 1
+print v2; // a
+
+// assign expression
+print v1 = v2 = "assign"; // assign
+
+// logical expression
+print true and false; // false
+print true or false;  // true
+
+// block statement
 var a = "global a";
 var b = "global b";
 var c = "global c";
@@ -17,3 +53,22 @@ var c = "global c";
 print a; // global a
 print b; // global b
 print c; // global c
+
+// if statement
+if (true) {
+    print 1; // 1
+} else {
+    print 0;
+}
+
+// while statement
+// 0
+// 1
+// 2
+// 3
+// 4
+var cnt = 0;
+while (cnt < 5) {
+    print cnt;
+    cnt = cnt + 1;
+}

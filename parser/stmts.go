@@ -13,6 +13,8 @@ type StmtVisitor interface {
 	VisitorExpressionStmt(*Expression) any
 	VisitorVarStmt(*Var) any
 	VisitorBlockStmt(*Block) any
+	VisitorIfStmt(*If) any
+	VisitorWhileStmt(*While) any
 }
 
 // >>>>>>>>>>>>>>>>>>>> print statement >>>>>>>>>>>>>>>>>>>>
@@ -94,7 +96,7 @@ func NewBlock(statements []Stmt) *Block {
 
 // {
 //     var a = 1;
-// 	   print a;
+//     print a;
 // }
 var _ = Stmt(NewBlock([]Stmt{
 	Stmt(NewVar(token.NewToken(token.IDE, "a", nil, 1), NewLiteral(1))),
@@ -102,3 +104,64 @@ var _ = Stmt(NewBlock([]Stmt{
 }))
 
 // <<<<<<<<<<<<<<<<<<<< block statement <<<<<<<<<<<<<<<<<<<<
+
+// >>>>>>>>>>>>>>>>>>>> if statement >>>>>>>>>>>>>>>>>>>>
+
+type If struct {
+	Condition  Expr `json:"if_condition"`
+	ThenBranch Stmt `json:"then_branch"`
+	ElseBranch Stmt `json:"else_branch"`
+}
+
+func (i *If) Accept(sv StmtVisitor) any {
+	return sv.VisitorIfStmt(i)
+}
+
+func NewIf(condition Expr, thenBranch Stmt, elseBranch Stmt) *If {
+	return &If{
+		Condition:  condition,
+		ThenBranch: thenBranch,
+		ElseBranch: elseBranch,
+	}
+}
+
+// if (true) {
+//     print 1;
+// } else {
+//     print 0;
+// }
+var _ = Stmt(NewIf(
+	Expr(NewLiteral(true)),
+	Stmt(NewPrint(NewLiteral(1))),
+	Stmt(NewPrint(NewLiteral(0))),
+))
+
+// <<<<<<<<<<<<<<<<<<<< if statement <<<<<<<<<<<<<<<<<<<<
+
+// >>>>>>>>>>>>>>>>>>>> while statement >>>>>>>>>>>>>>>>>>>>
+
+type While struct {
+	Condition Expr `json:"while_condition"`
+	LoopBody  Stmt `json:"while_loop_body"`
+}
+
+func (w *While) Accept(sv StmtVisitor) any {
+	return sv.VisitorWhileStmt(w)
+}
+
+func NewWhile(condition Expr, loopBody Stmt) *While {
+	return &While{
+		Condition: condition,
+		LoopBody:  loopBody,
+	}
+}
+
+// while (true) {
+//     print 888;
+// }
+var _ = Stmt(NewWhile(
+	Expr(NewLiteral(true)),
+	Stmt(NewPrint(NewLiteral(888))),
+))
+
+// <<<<<<<<<<<<<<<<<<<< while statement <<<<<<<<<<<<<<<<<<<<

@@ -10,11 +10,8 @@ type Parser struct {
 }
 
 func NewParser(tokens []token.Token) *Parser {
-	n := len(tokens)
-	t := make([]token.Token, n)
-	for i := 0; i < n; i++ {
-		t[i] = tokens[i]
-	}
+	t := make([]token.Token, len(tokens))
+	copy(t, tokens)
 	return &Parser{
 		tokens:  t,
 		current: 0,
@@ -58,7 +55,7 @@ func (p *Parser) varDecl() Stmt {
 	return NewVar(name, initializer)
 }
 
-// statement -> exprStmt | printStmt | block ;
+// statement -> printStmt | block | ifStmt | whileStmt | exprStmt ;
 func (p *Parser) statement() Stmt {
 	// print -> printStmt
 	if p.match(token.PRINT) {
@@ -67,6 +64,14 @@ func (p *Parser) statement() Stmt {
 	// { -> block
 	if p.match(token.LBRACE) {
 		return NewBlock(p.block())
+	}
+	// if -> ifStmt
+	if p.match(token.IF) {
+		return p.ifStatement()
+	}
+	// while -> whileStmt
+	if p.match(token.WHILE) {
+		return p.whileStatement()
 	}
 	return p.expressionStatement()
 }
@@ -93,6 +98,36 @@ func (p *Parser) block() []Stmt {
 	return statements
 }
 
+// ifStmt -> "if" "(" expression ")" statement ( "else" statement )? ;
+func (p *Parser) ifStatement() Stmt {
+	if p.check(token.LPAREN) {
+		p.advance()
+	} // else -> error: expect '(' after 'if'
+	condition := p.expression()
+	if p.check(token.RPAREN) {
+		p.advance()
+	} // else -> error: expect ')' after 'if' condition
+	thenBranch := p.statement()
+	var elseBranch Stmt
+	if p.match(token.ELSE) {
+		elseBranch = p.statement()
+	}
+	return NewIf(condition, thenBranch, elseBranch)
+}
+
+// whileStmt -> "while" "(" expression ")" statement ;
+func (p *Parser) whileStatement() Stmt {
+	if p.check(token.LPAREN) {
+		p.advance()
+	} // else -> error: expect '(' after 'while'
+	condition := p.expression()
+	if p.check(token.RPAREN) {
+		p.advance()
+	} // else -> error: expect ')' after 'while' statement
+	loopBody := p.statement()
+	return NewWhile(condition, loopBody)
+}
+
 // exprStmt -> expression ";" ;
 func (p *Parser) expressionStatement() Stmt {
 	value := p.expression()
@@ -108,9 +143,9 @@ func (p *Parser) expression() Expr {
 	return p.assignment()
 }
 
-// assignment -> IDENTIFIER "=" assignment | equality ;
+// assignment -> IDENTIFIER "=" assignment | logic_or ;
 func (p *Parser) assignment() Expr {
-	expr := p.equality()
+	expr := p.or()
 	if p.match(token.ASG) {
 		// assignmentTarget := p.prev()
 		value := p.assignment()
@@ -161,6 +196,28 @@ func (p *Parser) match(ttypes ...token.TokenType) bool {
 }
 
 // <<<<<<<<<<<<<<< helper functions <<<<<<<<<<<<<<<
+
+// logic_or -> logic_and ( "or" logic_and )* ;
+func (p *Parser) or() Expr {
+	lopreand := p.and()
+	for p.match(token.OR) {
+		operator := p.prev()
+		ropreand := p.and()
+		lopreand = NewLogical(lopreand, operator, ropreand)
+	}
+	return lopreand
+}
+
+// logic_and -> equality ( "and" equality )* ;
+func (p *Parser) and() Expr {
+	lopreand := p.equality()
+	for p.match(token.AND) {
+		operator := p.prev()
+		ropreand := p.equality()
+		lopreand = NewLogical(lopreand, operator, ropreand)
+	}
+	return lopreand
+}
 
 // equality -> comparison ( ( "!=" | "==" ) comparison )? ;
 func (p *Parser) equality() Expr {

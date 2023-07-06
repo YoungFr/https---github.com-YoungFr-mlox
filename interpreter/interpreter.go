@@ -31,7 +31,7 @@ func (i *Interpreter) exec(stmt parser.Stmt) {
 // The *Interpreter should implement the StmtVisitor interface.
 var _ = parser.StmtVisitor(NewInterpreter())
 
-// The implementation of the StmtVisitor interface.
+// >>>>>>>>>> Implementation of the StmtVisitor interface >>>>>>>>>>
 
 func (i *Interpreter) VisitorExpressionStmt(e *parser.Expression) any {
 	// expression statement like `a;` `1+2;` `true;` ...
@@ -73,6 +73,24 @@ func (i *Interpreter) execBlock(statements []parser.Stmt, env *environment) {
 	}
 }
 
+func (i *Interpreter) VisitorIfStmt(ifstmt *parser.If) any {
+	if isTruthy(i.eval(ifstmt.Condition)) {
+		i.exec(ifstmt.ThenBranch)
+	} else if ifstmt.ElseBranch != nil {
+		i.exec(ifstmt.ElseBranch)
+	}
+	return nil
+}
+
+func (i *Interpreter) VisitorWhileStmt(w *parser.While) any {
+	for isTruthy(i.eval(w.Condition)) {
+		i.exec(w.LoopBody)
+	}
+	return nil
+}
+
+// <<<<<<<<<< Implementation of the StmtVisitor interface <<<<<<<<<<
+
 // evaluating expression
 func (i *Interpreter) eval(expr parser.Expr) any {
 	return expr.Accept(i)
@@ -81,7 +99,7 @@ func (i *Interpreter) eval(expr parser.Expr) any {
 // The *Interpreter should implement the ExprVisitor interface.
 var _ = parser.ExprVisitor(NewInterpreter())
 
-// The implementation of the ExprVisitor interface.
+// >>>>>>>>>> Implementation of the ExprVisitor interface >>>>>>>>>>
 
 func (i *Interpreter) VisitorLiteralExpr(l *parser.Literal) any {
 	// literal expression like `1` `true` `"str"` ...
@@ -97,16 +115,20 @@ func (i *Interpreter) VisitorUnaryExpr(u *parser.Unary) any {
 			return -f
 		} // else -> runtime error: unary operator '-' can only be used for numbers
 	case token.NOT:
-		// In lox language, only the nil and false are false.
-		if ropreand == nil {
-			return true
-		}
-		if b, ok := ropreand.(bool); ok {
-			return !b
-		}
-		return false
+		return !isTruthy(ropreand)
 	}
 	return nil
+}
+
+// In Lox, only the nil and false are false.
+func isTruthy(a any) bool {
+	if a == nil {
+		return false
+	}
+	if b, ok := a.(bool); ok {
+		return b
+	}
+	return true
 }
 
 func (i *Interpreter) VisitorBinaryExpr(b *parser.Binary) any {
@@ -236,3 +258,22 @@ func (i *Interpreter) VisitorAssignExpr(a *parser.Assign) any {
 	i.env.asg(a.Name, value)
 	return value
 }
+
+func (i *Interpreter) VisitorLogicalExpr(l *parser.Logical) any {
+	lopreand := i.eval(l.Lopreand)
+	// short circuit evaluation
+	if l.Operator.Ttype == token.OR {
+		// The first opreand of logic_or is true
+		if isTruthy(lopreand) {
+			return lopreand
+		}
+	} else {
+		// The first opreand of logic_and is false
+		if !isTruthy(lopreand) {
+			return lopreand
+		}
+	}
+	return i.eval(l.Ropreand)
+}
+
+// <<<<<<<<<< Implementation of the ExprVisitor interface <<<<<<<<<<

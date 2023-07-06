@@ -4,7 +4,7 @@ import (
 	"github.com/youngfr/mlox/token"
 )
 
-// All expressions implement the Expr interface.
+// All expressions should implement the Expr interface.
 type Expr interface {
 	Accept(ExprVisitor) any
 }
@@ -17,6 +17,7 @@ type ExprVisitor interface {
 	VisitorGroupExpr(*Group) any
 	VisitorVariableExpr(*Variable) any
 	VisitorAssignExpr(*Assign) any
+	VisitorLogicalExpr(*Logical) any
 }
 
 // >>>>>>>>>>>>>>>>>>>> literal expression >>>>>>>>>>>>>>>>>>>>
@@ -158,3 +159,32 @@ func NewAssign(name token.Token, value Expr) *Assign {
 var _ = Expr(NewAssign(token.NewToken(token.IDE, "a", nil, 1), NewLiteral(5)))
 
 // <<<<<<<<<<<<<<<<<<<< assign expression <<<<<<<<<<<<<<<<<<<<
+
+// >>>>>>>>>>>>>>>>>>>> logical expression >>>>>>>>>>>>>>>>>>>>
+
+type Logical struct {
+	Lopreand Expr        `json:"logical_opreand"`
+	Operator token.Token `json:"logical_operator"`
+	Ropreand Expr        `json:"logical_ropreand"`
+}
+
+func (l *Logical) Accept(ev ExprVisitor) any {
+	return ev.VisitorLogicalExpr(l)
+}
+
+func NewLogical(lopreand Expr, operator token.Token, ropreand Expr) *Logical {
+	return &Logical{
+		Lopreand: lopreand,
+		Operator: operator,
+		Ropreand: ropreand,
+	}
+}
+
+// 1 <= 2 or 7 != 8
+var _ = Expr(NewLogical(
+	Expr(NewBinary(NewLiteral(1), token.NewToken(token.LSS, "<=", nil, 1), NewLiteral(2))),
+	token.NewToken(token.OR, "or", nil, 1),
+	Expr(NewBinary(NewLiteral(7), token.NewToken(token.NEQ, "!=", nil, 1), NewLiteral(8))),
+))
+
+// <<<<<<<<<<<<<<<<<<<< logical expression <<<<<<<<<<<<<<<<<<<<
