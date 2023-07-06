@@ -163,7 +163,7 @@ var _ = Expr(NewAssign(token.NewToken(token.IDE, "a", nil, 1), NewLiteral(5)))
 // >>>>>>>>>>>>>>>>>>>> logical expression >>>>>>>>>>>>>>>>>>>>
 
 type Logical struct {
-	Lopreand Expr        `json:"logical_opreand"`
+	Lopreand Expr        `json:"logical_lopreand"`
 	Operator token.Token `json:"logical_operator"`
 	Ropreand Expr        `json:"logical_ropreand"`
 }

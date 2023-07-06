@@ -4,11 +4,11 @@ package grammar
 
 // Lexical Grammar
 //
-// NUMBER     	-> DIGIT+ ( "." DIGIT+ )? ;
+// NUMBER       -> DIGIT+ ( "." DIGIT+ )? ;
 // STRING       -> "\"" <any char except "\"">* "\"" ;
 // IDENTIFIER   -> ALPHA ( ALPHA | DIGIT )* ;
-// ALPHA		-> "a" ... "z" | "A" ... "Z" | "_" ;
-// DIGIT     	-> "0" ... "9" ;
+// ALPHA        -> "a" ... "z" | "A" ... "Z" | "_" ;
+// DIGIT        -> "0" ... "9" ;
 
 // Syntax Grammar
 //
@@ -32,7 +32,7 @@ package grammar
 // whileStmt    -> "while" "(" expression ")" statement ;
 // block        -> "{" declaration* "}" ;
 //
-// expression 	-> assignment ;
+// expression   -> assignment ;
 // assignment   -> ( call "." )? IDENTIFIER "=" assignment | logic_or ;
 // logic_or     -> logic_and ( "or" logic_and )* ;
 // logic_and    -> equality ( "and" equality )* ;

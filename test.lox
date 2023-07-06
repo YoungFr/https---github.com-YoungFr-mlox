@@ -72,3 +72,12 @@ while (cnt < 5) {
     print cnt;
     cnt = cnt + 1;
 }
+
+// for statement
+var va = 1;
+var tmp;
+for (var vb = 1; va < 10000; vb = tmp+vb) {
+    print va;
+    tmp = va;
+    va = vb;
+}

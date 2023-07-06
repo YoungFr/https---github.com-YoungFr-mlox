@@ -2,7 +2,7 @@ package parser
 
 import "github.com/youngfr/mlox/token"
 
-// All statements implement the Stmt interface.
+// All statement should implement the Stmt interface.
 type Stmt interface {
 	Accept(StmtVisitor) any
 }

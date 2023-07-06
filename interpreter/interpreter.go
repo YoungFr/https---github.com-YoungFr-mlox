@@ -12,9 +12,7 @@ type Interpreter struct {
 }
 
 func NewInterpreter() *Interpreter {
-	return &Interpreter{
-		env: NewEnvironment(nil),
-	}
+	return &Interpreter{env: NewEnvironment(nil)}
 }
 
 func (i *Interpreter) Interpret(statements []parser.Stmt) {
@@ -31,7 +29,7 @@ func (i *Interpreter) exec(stmt parser.Stmt) {
 // The *Interpreter should implement the StmtVisitor interface.
 var _ = parser.StmtVisitor(NewInterpreter())
 
-// >>>>>>>>>> Implementation of the StmtVisitor interface >>>>>>>>>>
+// >>>>>>>>>> The implementation of the StmtVisitor interface >>>>>>>>>>
 
 func (i *Interpreter) VisitorExpressionStmt(e *parser.Expression) any {
 	// expression statement like `a;` `1+2;` `true;` ...
@@ -53,6 +51,7 @@ func (i *Interpreter) VisitorVarStmt(v *parser.Var) any {
 	if v.Initializer != nil {
 		value = i.eval(v.Initializer)
 	}
+	// define a new variable with `nil` as default value
 	i.env.def(v.Name.Lexeme, value)
 	return nil
 }
@@ -89,7 +88,7 @@ func (i *Interpreter) VisitorWhileStmt(w *parser.While) any {
 	return nil
 }
 
-// <<<<<<<<<< Implementation of the StmtVisitor interface <<<<<<<<<<
+// <<<<<<<<<< The implementation of the StmtVisitor interface <<<<<<<<<<
 
 // evaluating expression
 func (i *Interpreter) eval(expr parser.Expr) any {
@@ -99,10 +98,11 @@ func (i *Interpreter) eval(expr parser.Expr) any {
 // The *Interpreter should implement the ExprVisitor interface.
 var _ = parser.ExprVisitor(NewInterpreter())
 
-// >>>>>>>>>> Implementation of the ExprVisitor interface >>>>>>>>>>
+// >>>>>>>>>> The implementation of the ExprVisitor interface >>>>>>>>>>
 
 func (i *Interpreter) VisitorLiteralExpr(l *parser.Literal) any {
 	// literal expression like `1` `true` `"str"` ...
+	// We simply return it literal vlaue.
 	return l.Value
 }
 
@@ -113,7 +113,7 @@ func (i *Interpreter) VisitorUnaryExpr(u *parser.Unary) any {
 	case token.SUB:
 		if f, ok := ropreand.(float64); ok {
 			return -f
-		} // else -> runtime error: unary operator '-' can only be used for numbers
+		} // else -> error: unary operator '-' can only be used for numbers
 	case token.NOT:
 		return !isTruthy(ropreand)
 	}
@@ -147,32 +147,26 @@ func (i *Interpreter) VisitorBinaryExpr(b *parser.Binary) any {
 		if okl && okr {
 			return ls + rs
 		}
-		// finally -> runtime error:
+		// finally -> error:
 		// all opreands of the binary operator '+' must be numbers or strings
 	case token.SUB:
 		lf, okl := lopreand.(float64)
 		rf, okr := roperand.(float64)
 		if okl && okr {
 			return lf - rf
-		}
-		// else -> runtime error:
-		// all opreands of the binary operator '-' must be numbers
+		} // else -> error: all opreands of the binary operator '-' must be numbers
 	case token.MUL:
 		lf, okl := lopreand.(float64)
 		rf, okr := roperand.(float64)
 		if okl && okr {
 			return lf * rf
-		}
-		// else -> runtime error:
-		// all opreands of the binary operator '*' must be numbers
+		} // else -> error: all opreands of the binary operator '*' must be numbers
 	case token.DIV:
 		lf, okl := lopreand.(float64)
 		rf, okr := roperand.(float64)
 		if okl && okr {
 			return lf / rf
-		}
-		// else -> runtime error:
-		// all opreands of the binary operator '/' must be numbers
+		} // else -> error: all opreands of the binary operator '/' must be numbers
 	case token.GTR:
 		lf, okl := lopreand.(float64)
 		rf, okr := roperand.(float64)
@@ -184,7 +178,7 @@ func (i *Interpreter) VisitorBinaryExpr(b *parser.Binary) any {
 		if okl && okr {
 			return ls > rs
 		}
-		// finally -> runtime error:
+		// finally -> error:
 		// all opreands of the binary operator '>' must be numbers or strings
 	case token.GEQ:
 		lf, okl := lopreand.(float64)
@@ -197,7 +191,7 @@ func (i *Interpreter) VisitorBinaryExpr(b *parser.Binary) any {
 		if okl && okr {
 			return ls >= rs
 		}
-		// finally -> runtime error:
+		// finally -> error:
 		// all opreands of the binary operator '>=' must be numbers or strings
 	case token.LSS:
 		lf, okl := lopreand.(float64)
@@ -210,7 +204,7 @@ func (i *Interpreter) VisitorBinaryExpr(b *parser.Binary) any {
 		if okl && okr {
 			return ls < rs
 		}
-		// finally -> runtime error:
+		// finally -> error:
 		// all opreands of the binary operator '<' must be numbers or strings
 	case token.LEQ:
 		lf, okl := lopreand.(float64)
@@ -223,7 +217,7 @@ func (i *Interpreter) VisitorBinaryExpr(b *parser.Binary) any {
 		if okl && okr {
 			return ls <= rs
 		}
-		// finally -> runtime error:
+		// finally -> error:
 		// all opreands of the binary operator '<=' must be numbers or strings
 	case token.EQL:
 		return isEqual(lopreand, roperand)
@@ -245,6 +239,7 @@ func isEqual(a any, b any) bool {
 
 func (i *Interpreter) VisitorGroupExpr(g *parser.Group) any {
 	// group expression like `(1)` `(1+2)` `(1!=2)` ...
+	// We evaluate its expression.
 	return i.eval(g.Expression)
 }
 
@@ -254,6 +249,7 @@ func (i *Interpreter) VisitorVariableExpr(v *parser.Variable) any {
 }
 
 func (i *Interpreter) VisitorAssignExpr(a *parser.Assign) any {
+	// assign expression like `a = 2` `a = b = true` ...
 	value := i.eval(a.Value)
 	i.env.asg(a.Name, value)
 	return value
@@ -276,4 +272,4 @@ func (i *Interpreter) VisitorLogicalExpr(l *parser.Logical) any {
 	return i.eval(l.Ropreand)
 }
 
-// <<<<<<<<<< Implementation of the ExprVisitor interface <<<<<<<<<<
+// <<<<<<<<<< The implementation of the ExprVisitor interface <<<<<<<<<<
