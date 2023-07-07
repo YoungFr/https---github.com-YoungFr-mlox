@@ -15,6 +15,8 @@ type StmtVisitor interface {
 	VisitorBlockStmt(*Block) any
 	VisitorIfStmt(*If) any
 	VisitorWhileStmt(*While) any
+	VisitorFunctionStmt(*Function) any
+	// VisitorReturnStmt(*Return) any
 }
 
 // >>>>>>>>>>>>>>>>>>>> print statement >>>>>>>>>>>>>>>>>>>>
@@ -165,3 +167,49 @@ var _ = Stmt(NewWhile(
 ))
 
 // <<<<<<<<<<<<<<<<<<<< while statement <<<<<<<<<<<<<<<<<<<<
+
+// >>>>>>>>>>>>>>>>>>>> function statement >>>>>>>>>>>>>>>>>>>>
+
+type Function struct {
+	Name   token.Token   `json:"name"`
+	Params []token.Token `json:"parameters"`
+	Body   []Stmt        `json:"function_body"`
+}
+
+func (f *Function) Accept(sv StmtVisitor) any {
+	return sv.VisitorFunctionStmt(f)
+}
+
+func NewFunction(name token.Token, params []token.Token, body []Stmt) *Function {
+	p := make([]token.Token, len(params))
+	copy(p, params)
+	b := make([]Stmt, len(body))
+	copy(b, body)
+	return &Function{
+		Name:   name,
+		Params: p,
+		Body:   b,
+	}
+}
+
+// <<<<<<<<<<<<<<<<<<<< function statement <<<<<<<<<<<<<<<<<<<<
+
+// >>>>>>>>>>>>>>>>>>>> return statement >>>>>>>>>>>>>>>>>>>>
+
+// type Return struct {
+// 	Keyword token.Token `json:"keyword"`
+// 	Value   Expr        `json:"value"`
+// }
+
+// func (r *Return) Accept(sv StmtVisitor) any {
+// 	return sv.VisitorReturnStmt(r)
+// }
+
+// func NewReturn(keyword token.Token, value Expr) *Return {
+// 	return &Return{
+// 		Keyword: keyword,
+// 		Value:   value,
+// 	}
+// }
+
+// <<<<<<<<<<<<<<<<<<<< return statement <<<<<<<<<<<<<<<<<<<<

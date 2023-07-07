@@ -18,6 +18,7 @@ type ExprVisitor interface {
 	VisitorVariableExpr(*Variable) any
 	VisitorAssignExpr(*Assign) any
 	VisitorLogicalExpr(*Logical) any
+	VisitorCallExpr(*Call) any
 }
 
 // >>>>>>>>>>>>>>>>>>>> literal expression >>>>>>>>>>>>>>>>>>>>
@@ -188,3 +189,27 @@ var _ = Expr(NewLogical(
 ))
 
 // <<<<<<<<<<<<<<<<<<<< logical expression <<<<<<<<<<<<<<<<<<<<
+
+// >>>>>>>>>>>>>>>>>>>> call expression >>>>>>>>>>>>>>>>>>>>
+
+type Call struct {
+	Callee    Expr        `json:"callee"`
+	Paren     token.Token `json:"parenthesis"`
+	Arguments []Expr      `json:"arguments"`
+}
+
+func (c *Call) Accept(ev ExprVisitor) any {
+	return ev.VisitorCallExpr(c)
+}
+
+func NewCall(callee Expr, paren token.Token, arguments []Expr) *Call {
+	args := make([]Expr, len(arguments))
+	copy(args, arguments)
+	return &Call{
+		Callee:    callee,
+		Paren:     paren,
+		Arguments: args,
+	}
+}
+
+// <<<<<<<<<<<<<<<<<<<< call expression <<<<<<<<<<<<<<<<<<<<

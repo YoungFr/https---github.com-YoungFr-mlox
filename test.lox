@@ -81,3 +81,17 @@ for (var vb = 1; va < 10000; vb = tmp+vb) {
     tmp = va;
     va = vb;
 }
+
+fun echo(one, two) {
+    print one;
+    print two;
+}
+
+echo(1, "one");
+
+print echo;
+
+print date();
+print date;
+print clock();
+print clock;

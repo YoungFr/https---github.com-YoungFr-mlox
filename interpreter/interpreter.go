@@ -2,17 +2,62 @@ package interpreter
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/youngfr/mlox/parser"
 	"github.com/youngfr/mlox/token"
 )
+
+// functions global-environment
+var globals *environment = NewEnvironment(nil)
+
+func init() {
+	globals.def("date", &date{})
+	globals.def("clock", &clock{})
+}
+
+type date struct{}
+
+func (d *date) arity() int {
+	return 0
+}
+
+func (d *date) call(interpreter *Interpreter, arguments []any) any {
+	year, month, day := time.Now().Date()
+	return fmt.Sprintf("%4d-%03s-%02d", year, month.String()[:3], day)
+}
+
+func (d *date) String() string {
+	return "<native fn date>"
+}
+
+// >>>>>>>>>>>>>>>>>>>>>>>>> The native clock function >>>>>>>>>>>>>>>>>>>>>>>>>
+
+type clock struct{}
+
+func (c *clock) arity() int {
+	return 0
+}
+
+func (c *clock) call(interpreter *Interpreter, arguments []any) any {
+	hour, min, sec := time.Now().Clock()
+	return fmt.Sprintf("%02d:%02d:%02d", hour, min, sec)
+}
+
+func (c *clock) String() string {
+	return "<native fn clock>"
+}
+
+// <<<<<<<<<<<<<<<<<<<<<<<<< The native clock function <<<<<<<<<<<<<<<<<<<<<<<<<
 
 type Interpreter struct {
 	env *environment
 }
 
 func NewInterpreter() *Interpreter {
-	return &Interpreter{env: NewEnvironment(nil)}
+	return &Interpreter{
+		env: globals,
+	}
 }
 
 func (i *Interpreter) Interpret(statements []parser.Stmt) {
@@ -85,6 +130,12 @@ func (i *Interpreter) VisitorWhileStmt(w *parser.While) any {
 	for isTruthy(i.eval(w.Condition)) {
 		i.exec(w.LoopBody)
 	}
+	return nil
+}
+
+func (i *Interpreter) VisitorFunctionStmt(f *parser.Function) any {
+	function := NewLoxFunction(f)
+	i.env.def(f.Name.Lexeme, function)
 	return nil
 }
 
@@ -270,6 +321,28 @@ func (i *Interpreter) VisitorLogicalExpr(l *parser.Logical) any {
 		}
 	}
 	return i.eval(l.Ropreand)
+}
+
+func (i *Interpreter) VisitorCallExpr(c *parser.Call) any {
+	callee := i.eval(c.Callee)
+	arguments := make([]any, 0)
+	for _, argument := range c.Arguments {
+		arguments = append(arguments, i.eval(argument))
+	}
+
+	// Make sure callee is callable.
+	// if function, ok := callee.(LoxCallable); !ok {
+	//     error: can only call functions and classes
+	// }
+
+	function := callee.(LoxCallable)
+
+	// Check amount of parameters.
+	// if len(arguments) != function.arity() {
+	//     error: expected function.arity() arguments but got len(arguments)
+	// }
+
+	return function.call(i, arguments)
 }
 
 // <<<<<<<<<< The implementation of the ExprVisitor interface <<<<<<<<<<

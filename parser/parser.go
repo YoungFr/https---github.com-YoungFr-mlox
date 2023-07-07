@@ -66,14 +66,52 @@ func (p *Parser) Parse() []Stmt {
 	return statements
 }
 
-// declaration -> varDecl | statement ;
+// declaration -> funDecl | varDecl | statement ;
 func (p *Parser) decl() Stmt {
+	// a function declaration
+	if p.match(token.FUN) {
+		return p.function("function")
+	}
 	// a variable declaration statement
 	if p.match(token.VAR) {
 		return p.varDecl()
 	}
 	// other statements
 	return p.statement()
+}
+
+// function   -> IDENTIFIER "(" parameters? ")" block ;
+// parameters -> IDENTIFIER ( "," IDENTIFIER )* ;
+func (p *Parser) function(kind string) Stmt {
+	// function name
+	var name token.Token
+	if p.check(token.IDE) {
+		name = p.advance()
+	} // else -> error: expect function/class name
+	if p.check(token.LPAREN) {
+		p.advance()
+	} // else -> error: expect '(' after function name
+	// function parameters
+	parameters := make([]token.Token, 0)
+	if !p.check(token.RPAREN) {
+		if p.check(token.IDE) {
+			parameters = append(parameters, p.advance())
+		} // else -> error: expect parameter
+		for p.match(token.COM) {
+			if p.check(token.IDE) {
+				parameters = append(parameters, p.advance())
+			} // else -> error: expect parameter
+		}
+	}
+	if p.check(token.RPAREN) {
+		p.advance()
+	} // else -> error: expect ')' after parameters
+	// function body
+	if p.check(token.LBRACE) {
+		p.advance()
+	} // else -> error: expect '{' before function body
+	body := p.block()
+	return NewFunction(name, parameters, body)
 }
 
 // varDecl -> "var" IDENTIFIER ( "=" expression )? ";" ;
@@ -334,14 +372,42 @@ func (p *Parser) factor() Expr {
 	return lopreand
 }
 
-// unary -> ( "!" | "-" ) unary | primary;
+// unary -> ( "!" | "-" ) unary | call ;
 func (p *Parser) unary() Expr {
 	if p.match(token.NOT, token.SUB) {
 		operator := p.prev()
 		roperand := p.unary()
 		return NewUnary(operator, roperand)
 	}
-	return p.primary()
+	return p.call()
+}
+
+// call -> primary ( "(" arguments? ")" | "." IDENTIFIER )* ;
+func (p *Parser) call() Expr {
+	expr := p.primary()
+	for {
+		if p.match(token.LPAREN) {
+			expr = p.finishCall(expr)
+		} else {
+			break
+		}
+	}
+	return expr
+}
+
+func (p *Parser) finishCall(callee Expr) Expr {
+	arguments := make([]Expr, 0)
+	if !p.check(token.RPAREN) {
+		arguments = append(arguments, p.expression())
+		for p.match(token.COM) {
+			arguments = append(arguments, p.expression())
+		}
+	}
+	var paren token.Token
+	if p.check(token.RPAREN) {
+		paren = p.advance()
+	} // else -> error: expect ')' after arguments
+	return NewCall(callee, paren, arguments)
 }
 
 // primary -> "true" | "false" | "nil" | NUMBER | STRING | IDENTIFIER | "(" expression ")" ;
