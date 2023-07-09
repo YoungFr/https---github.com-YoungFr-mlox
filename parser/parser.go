@@ -68,93 +68,76 @@ func (p *Parser) Parse() []Stmt {
 
 // declaration -> funDecl | varDecl | statement ;
 func (p *Parser) decl() Stmt {
-	// a function declaration
 	if p.match(token.FUN) {
-		return p.function("function")
+		return p.funDecl("function")
 	}
-	// a variable declaration statement
 	if p.match(token.VAR) {
 		return p.varDecl()
 	}
-	// other statements
 	return p.statement()
 }
 
 // function   -> IDENTIFIER "(" parameters? ")" block ;
 // parameters -> IDENTIFIER ( "," IDENTIFIER )* ;
-func (p *Parser) function(kind string) Stmt {
-	// function name
+func (p *Parser) funDecl(kind string) Stmt {
 	var name token.Token
 	if p.check(token.IDE) {
 		name = p.advance()
-	} // else -> error: expect function/class name
+	}
 	if p.check(token.LPAREN) {
 		p.advance()
-	} // else -> error: expect '(' after function name
-	// function parameters
+	}
 	parameters := make([]token.Token, 0)
 	if !p.check(token.RPAREN) {
 		if p.check(token.IDE) {
 			parameters = append(parameters, p.advance())
-		} // else -> error: expect parameter
+		}
 		for p.match(token.COM) {
 			if p.check(token.IDE) {
 				parameters = append(parameters, p.advance())
-			} // else -> error: expect parameter
+			}
 		}
 	}
 	if p.check(token.RPAREN) {
 		p.advance()
-	} // else -> error: expect ')' after parameters
-	// function body
+	}
 	if p.check(token.LBRACE) {
 		p.advance()
-	} // else -> error: expect '{' before function body
+	}
 	body := p.block()
 	return NewFunction(name, parameters, body)
 }
 
 // varDecl -> "var" IDENTIFIER ( "=" expression )? ";" ;
 func (p *Parser) varDecl() Stmt {
-	// variable's name
 	var name token.Token
 	if p.check(token.IDE) {
 		name = p.advance()
-	} // else -> error: expect variable name
-
-	// variable's initializer
+	}
 	var initializer Expr
 	if p.match(token.ASG) {
 		initializer = p.expression()
 	}
-
-	// terminated ';'
 	if p.check(token.SEM) {
 		p.advance()
-	} // else -> error: expect ';' after variable declaration statement
-
+	}
 	return NewVar(name, initializer)
 }
 
 // statement -> printStmt | block | ifStmt | whileStmt | forStmt | exprStmt ;
 func (p *Parser) statement() Stmt {
-	// print -> printStmt
 	if p.match(token.PRINT) {
 		return p.printStatement()
 	}
-	// { -> block
 	if p.match(token.LBRACE) {
 		return NewBlock(p.block())
 	}
-	// if -> ifStmt
 	if p.match(token.IF) {
 		return p.ifStatement()
 	}
-	// while -> whileStmt
 	if p.match(token.WHILE) {
 		return p.whileStatement()
 	}
-	// for -> forStmt
 	if p.match(token.FOR) {
 		return p.forStatement()
 	}
@@ -164,10 +147,9 @@ func (p *Parser) statement() Stmt {
 // printStmt -> "print" expression ";" ;
 func (p *Parser) printStatement() Stmt {
 	value := p.expression()
-	// terminated ';'
 	if p.check(token.SEM) {
 		p.advance()
-	} // else -> error: expect ';' after print statement
+	}
 	return NewPrint(value)
 }
 
@@ -179,44 +161,37 @@ func (p *Parser) block() []Stmt {
 	}
 	if p.check(token.RBRACE) {
 		p.advance()
-	} // else -> error: expect '}' after block statement
+	}
 	return statements
 }
 
 // ifStmt -> "if" "(" expression ")" statement ( "else" statement )? ;
 func (p *Parser) ifStatement() Stmt {
-	// if condition
 	if p.check(token.LPAREN) {
 		p.advance()
-	} // else -> error: expect '(' after 'if'
+	}
 	condition := p.expression()
 	if p.check(token.RPAREN) {
 		p.advance()
-	} // else -> error: expect ')' after 'if' condition
-
+	}
 	thenBranch := p.statement()
-
 	var elseBranch Stmt
 	if p.match(token.ELSE) {
 		elseBranch = p.statement()
 	}
-
 	return NewIf(condition, thenBranch, elseBranch)
 }
 
 // whileStmt -> "while" "(" expression ")" statement ;
 func (p *Parser) whileStatement() Stmt {
-	// while condition
 	if p.check(token.LPAREN) {
 		p.advance()
-	} // else -> error: expect '(' after 'while'
+	}
 	condition := p.expression()
 	if p.check(token.RPAREN) {
 		p.advance()
-	} // else -> error: expect ')' after 'while' statement
-
+	}
 	loopBody := p.statement()
-
 	return NewWhile(condition, loopBody)
 }
 
@@ -232,8 +207,7 @@ func (p *Parser) whileStatement() Stmt {
 func (p *Parser) forStatement() Stmt {
 	if p.check(token.LPAREN) {
 		p.advance()
-	} // else -> error: expect '(' after 'for'
-
+	}
 	var initializer Stmt
 	if p.match(token.SEM) {
 		initializer = nil
@@ -248,16 +222,15 @@ func (p *Parser) forStatement() Stmt {
 	}
 	if p.check(token.SEM) {
 		p.advance()
-	} // else -> error: expect ';' after condition
+	}
 	var increment Expr
 	if !p.check(token.RPAREN) {
 		increment = p.expression()
 	}
 	if p.check(token.RPAREN) {
 		p.advance()
-	} // else -> error: expect ')' after 'for' clauses
+	}
 	loopBody := p.statement()
-
 	if increment != nil {
 		loopBody = NewBlock([]Stmt{
 			loopBody,
@@ -280,10 +253,9 @@ func (p *Parser) forStatement() Stmt {
 // exprStmt -> expression ";" ;
 func (p *Parser) expressionStatement() Stmt {
 	value := p.expression()
-	// terminated ';'
 	if p.check(token.SEM) {
 		p.advance()
-	} // else -> error: expect ';' after expression statement
+	}
 	return NewExpression(value)
 }
 
@@ -301,7 +273,7 @@ func (p *Parser) assignment() Expr {
 		if variableExpr, ok := expr.(*Variable); ok {
 			name := variableExpr.Name
 			return NewAssign(name, value)
-		} // else -> error: invalid assignment target.
+		}
 	}
 	return expr
 }
@@ -395,6 +367,7 @@ func (p *Parser) call() Expr {
 	return expr
 }
 
+// arguments -> expression ( "," expression )* ;
 func (p *Parser) finishCall(callee Expr) Expr {
 	arguments := make([]Expr, 0)
 	if !p.check(token.RPAREN) {
@@ -406,7 +379,7 @@ func (p *Parser) finishCall(callee Expr) Expr {
 	var paren token.Token
 	if p.check(token.RPAREN) {
 		paren = p.advance()
-	} // else -> error: expect ')' after arguments
+	}
 	return NewCall(callee, paren, arguments)
 }
 
@@ -431,7 +404,7 @@ func (p *Parser) primary() Expr {
 		expr := p.expression()
 		if p.check(token.RPAREN) {
 			p.advance()
-		} // else -> error: expect ')' after group expression
+		}
 		return NewGroup(expr)
 	}
 	return nil
