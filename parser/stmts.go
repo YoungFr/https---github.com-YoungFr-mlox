@@ -16,10 +16,10 @@ type StmtVisitor interface {
 	VisitorIfStmt(*If) any
 	VisitorWhileStmt(*While) any
 	VisitorFunctionStmt(*Function) any
-	// VisitorReturnStmt(*Return) any
+	VisitorReturnStmt(*Return) any
 }
 
-// >>>>>>>>>>>>>>>>>>>> print statement >>>>>>>>>>>>>>>>>>>>
+/******************** print statement ********************/
 
 type Print struct {
 	Expression Expr `json:"printstmt_expr"`
@@ -36,9 +36,9 @@ func NewPrint(expression Expr) *Print {
 // print !true;
 var _ = Stmt(NewPrint(NewUnary(token.NewToken(token.NOT, "!", nil, 1), NewLiteral(true))))
 
-// <<<<<<<<<<<<<<<<<<<< print statement <<<<<<<<<<<<<<<<<<<<
+/******************** print statement ********************/
 
-// >>>>>>>>>>>>>>>>>>>> expression statement >>>>>>>>>>>>>>>>>>>>
+/******************** expression statement ********************/
 
 type Expression struct {
 	ExprStmtExpr Expr `json:"exprstmt_expr"`
@@ -55,9 +55,9 @@ func NewExpression(expression Expr) *Expression {
 // -5;
 var _ = Stmt(NewExpression(NewUnary(token.NewToken(token.SUB, "-", nil, 1), NewLiteral((5)))))
 
-// <<<<<<<<<<<<<<<<<<<< expression statement <<<<<<<<<<<<<<<<<<<<
+/******************** expression statement ********************/
 
-// >>>>>>>>>>>>>>>>>>>> variable declaration statement >>>>>>>>>>>>>>>>>>>>
+/******************** variable declaration statement ********************/
 
 type Var struct {
 	Name        token.Token `json:"variable_name"`
@@ -78,9 +78,9 @@ func NewVar(name token.Token, initializer Expr) *Var {
 // var a = 5;
 var _ = Stmt(NewVar(token.NewToken(token.IDE, "a", nil, 1), NewLiteral(5)))
 
-// <<<<<<<<<<<<<<<<<<<< variable declaration statement <<<<<<<<<<<<<<<<<<<<
+/******************** variable declaration statement ********************/
 
-// >>>>>>>>>>>>>>>>>>>> block statement >>>>>>>>>>>>>>>>>>>>
+/******************** block statement ********************/
 
 type Block struct {
 	Statements []Stmt `json:"block_statements"`
@@ -105,9 +105,9 @@ var _ = Stmt(NewBlock([]Stmt{
 	Stmt(NewPrint(Expr(NewVariable(token.NewToken(token.IDE, "a", nil, 2))))),
 }))
 
-// <<<<<<<<<<<<<<<<<<<< block statement <<<<<<<<<<<<<<<<<<<<
+/******************** block statement ********************/
 
-// >>>>>>>>>>>>>>>>>>>> if statement >>>>>>>>>>>>>>>>>>>>
+/******************** if statement ********************/
 
 type If struct {
 	Condition  Expr `json:"if_condition"`
@@ -138,9 +138,9 @@ var _ = Stmt(NewIf(
 	Stmt(NewPrint(NewLiteral(0))),
 ))
 
-// <<<<<<<<<<<<<<<<<<<< if statement <<<<<<<<<<<<<<<<<<<<
+/******************** if statement ********************/
 
-// >>>>>>>>>>>>>>>>>>>> while statement >>>>>>>>>>>>>>>>>>>>
+/******************** while statement ********************/
 
 type While struct {
 	Condition Expr `json:"while_condition"`
@@ -166,9 +166,9 @@ var _ = Stmt(NewWhile(
 	Stmt(NewPrint(NewLiteral(888))),
 ))
 
-// <<<<<<<<<<<<<<<<<<<< while statement <<<<<<<<<<<<<<<<<<<<
+/******************** while statement ********************/
 
-// >>>>>>>>>>>>>>>>>>>> function statement >>>>>>>>>>>>>>>>>>>>
+/******************** function declaration statement ********************/
 
 type Function struct {
 	Name   token.Token   `json:"name"`
@@ -192,24 +192,24 @@ func NewFunction(name token.Token, params []token.Token, body []Stmt) *Function 
 	}
 }
 
-// <<<<<<<<<<<<<<<<<<<< function statement <<<<<<<<<<<<<<<<<<<<
+/******************** function declaration statement ********************/
 
-// >>>>>>>>>>>>>>>>>>>> return statement >>>>>>>>>>>>>>>>>>>>
+/******************** return statement ********************/
 
-// type Return struct {
-// 	Keyword token.Token `json:"keyword"`
-// 	Value   Expr        `json:"value"`
-// }
+type Return struct {
+	Keyword token.Token `json:"keyword"`
+	Value   Expr        `json:"value"`
+}
 
-// func (r *Return) Accept(sv StmtVisitor) any {
-// 	return sv.VisitorReturnStmt(r)
-// }
+func (r *Return) Accept(sv StmtVisitor) any {
+	return sv.VisitorReturnStmt(r)
+}
 
-// func NewReturn(keyword token.Token, value Expr) *Return {
-// 	return &Return{
-// 		Keyword: keyword,
-// 		Value:   value,
-// 	}
-// }
+func NewReturn(keyword token.Token, value Expr) *Return {
+	return &Return{
+		Keyword: keyword,
+		Value:   value,
+	}
+}
 
-// <<<<<<<<<<<<<<<<<<<< return statement <<<<<<<<<<<<<<<<<<<<
+/******************** return statement ********************/

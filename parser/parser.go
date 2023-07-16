@@ -124,7 +124,7 @@ func (p *Parser) varDecl() Stmt {
 	return NewVar(name, initializer)
 }
 
-// statement -> printStmt | block | ifStmt | whileStmt | forStmt | exprStmt ;
+// statement -> printStmt | block | ifStmt | whileStmt | forStmt | exprStmt | returnStmt ;
 func (p *Parser) statement() Stmt {
 	if p.match(token.PRINT) {
 		return p.printStatement()
@@ -140,6 +140,9 @@ func (p *Parser) statement() Stmt {
 	}
 	if p.match(token.FOR) {
 		return p.forStatement()
+	}
+	if p.match(token.RETURN) {
+		return p.returnStatement()
 	}
 	return p.expressionStatement()
 }
@@ -248,6 +251,19 @@ func (p *Parser) forStatement() Stmt {
 		})
 	}
 	return loopBody
+}
+
+// returnStmt -> "return" expression? ";" ;
+func (p *Parser) returnStatement() Stmt {
+	keyword := p.prev()
+	var value Expr
+	if !p.check(token.SEM) {
+		value = p.expression()
+	}
+	if p.check(token.SEM) {
+		p.advance()
+	}
+	return NewReturn(keyword, value)
 }
 
 // exprStmt -> expression ";" ;
