@@ -41,6 +41,11 @@ func runFile(path string) {
 }
 
 func runPrompt() {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println(r)
+		}
+	}()
 	fmt.Println(`Welcome to MLOX-REPL. Type "exit" or "Ctrl+Z" to exit.`)
 	inputsc := bufio.NewScanner(os.Stdin)
 	ir := interpreter.NewInterpreter()
@@ -55,7 +60,6 @@ loop:
 		default:
 			tokens, _ := scanner.NewScanner(line).ScanTokens()
 			stmts := parser.NewParser(tokens).Parse()
-
 			// parser.PrintAST(stmts)
 			ir.Interpret(stmts)
 			fmt.Print(">>> ")

@@ -25,9 +25,7 @@ func (e *environment) get(name token.Token) any {
 	if e.enclosing != nil {
 		return e.enclosing.get(name)
 	}
-	// If we reach here, an `undefined variable` error should be reported.
-	// But for now, we simply return nil.
-	return nil
+	panic("undefined variable: " + name.Lexeme)
 }
 
 func (e *environment) asg(name token.Token, value any) {
@@ -39,5 +37,5 @@ func (e *environment) asg(name token.Token, value any) {
 		e.enclosing.asg(name, value)
 		return
 	}
-	// If we reach here, an `undefined variable` error should be reported.
+	panic("undefined variable: " + name.Lexeme)
 }

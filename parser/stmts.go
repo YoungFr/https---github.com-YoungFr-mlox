@@ -19,8 +19,6 @@ type StmtVisitor interface {
 	VisitorReturnStmt(*Return) any
 }
 
-/******************** print statement ********************/
-
 type Print struct {
 	Expression Expr `json:"printstmt_expr"`
 }
@@ -36,10 +34,6 @@ func NewPrint(expression Expr) *Print {
 // print !true;
 var _ = Stmt(NewPrint(NewUnary(token.NewToken(token.NOT, "!", nil, 1), NewLiteral(true))))
 
-/******************** print statement ********************/
-
-/******************** expression statement ********************/
-
 type Expression struct {
 	ExprStmtExpr Expr `json:"exprstmt_expr"`
 }
@@ -54,10 +48,6 @@ func NewExpression(expression Expr) *Expression {
 
 // -5;
 var _ = Stmt(NewExpression(NewUnary(token.NewToken(token.SUB, "-", nil, 1), NewLiteral((5)))))
-
-/******************** expression statement ********************/
-
-/******************** variable declaration statement ********************/
 
 type Var struct {
 	Name        token.Token `json:"variable_name"`
@@ -77,10 +67,6 @@ func NewVar(name token.Token, initializer Expr) *Var {
 
 // var a = 5;
 var _ = Stmt(NewVar(token.NewToken(token.IDE, "a", nil, 1), NewLiteral(5)))
-
-/******************** variable declaration statement ********************/
-
-/******************** block statement ********************/
 
 type Block struct {
 	Statements []Stmt `json:"block_statements"`
@@ -104,10 +90,6 @@ var _ = Stmt(NewBlock([]Stmt{
 	Stmt(NewVar(token.NewToken(token.IDE, "a", nil, 1), NewLiteral(1))),
 	Stmt(NewPrint(Expr(NewVariable(token.NewToken(token.IDE, "a", nil, 2))))),
 }))
-
-/******************** block statement ********************/
-
-/******************** if statement ********************/
 
 type If struct {
 	Condition  Expr `json:"if_condition"`
@@ -138,10 +120,6 @@ var _ = Stmt(NewIf(
 	Stmt(NewPrint(NewLiteral(0))),
 ))
 
-/******************** if statement ********************/
-
-/******************** while statement ********************/
-
 type While struct {
 	Condition Expr `json:"while_condition"`
 	LoopBody  Stmt `json:"while_loop_body"`
@@ -166,12 +144,8 @@ var _ = Stmt(NewWhile(
 	Stmt(NewPrint(NewLiteral(888))),
 ))
 
-/******************** while statement ********************/
-
-/******************** function declaration statement ********************/
-
 type Function struct {
-	Name   token.Token   `json:"name"`
+	Name   token.Token   `json:"function_name"`
 	Params []token.Token `json:"parameters"`
 	Body   []Stmt        `json:"function_body"`
 }
@@ -192,9 +166,14 @@ func NewFunction(name token.Token, params []token.Token, body []Stmt) *Function 
 	}
 }
 
-/******************** function declaration statement ********************/
-
-/******************** return statement ********************/
+// fun echo(n) {
+//     print n;
+// }
+var _ = NewFunction(
+	token.NewToken(token.IDE, "echo", nil, 1),
+	[]token.Token{token.NewToken(token.IDE, "n", nil, 1)},
+	[]Stmt{NewPrint(NewVariable(token.NewToken(token.IDE, "n", nil, 2)))},
+)
 
 type Return struct {
 	Keyword token.Token `json:"keyword"`
@@ -212,4 +191,5 @@ func NewReturn(keyword token.Token, value Expr) *Return {
 	}
 }
 
-/******************** return statement ********************/
+// return true;
+var _ = NewReturn(token.NewToken(token.RETURN, "return", nil, 1), NewLiteral(true))

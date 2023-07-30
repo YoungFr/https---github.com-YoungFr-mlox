@@ -21,8 +21,6 @@ type ExprVisitor interface {
 	VisitorCallExpr(*Call) any
 }
 
-// >>>>>>>>>>>>>>>>>>>> literal expression >>>>>>>>>>>>>>>>>>>>
-
 type Literal struct {
 	Value any `json:"literal_value"`
 }
@@ -40,10 +38,6 @@ var _ = Expr(NewLiteral(12.34))
 
 // string literal "str"
 var _ = Expr(NewLiteral("str"))
-
-// <<<<<<<<<<<<<<<<<<<< literal expression <<<<<<<<<<<<<<<<<<<<
-
-// >>>>>>>>>>>>>>>>>>>> unary expression >>>>>>>>>>>>>>>>>>>>
 
 type Unary struct {
 	Operator token.Token `json:"unary_operator"`
@@ -66,10 +60,6 @@ var _ = Expr(NewUnary(token.NewToken(token.NOT, "!", nil, 1), NewLiteral(true)))
 
 // -1.25
 var _ = Expr(NewUnary(token.NewToken(token.SUB, "-", nil, 1), NewLiteral(1.25)))
-
-// <<<<<<<<<<<<<<<<<<<< unary expression <<<<<<<<<<<<<<<<<<<<
-
-// >>>>>>>>>>>>>>>>>>>> binary expression >>>>>>>>>>>>>>>>>>>>
 
 type Binary struct {
 	Lopreand Expr        `json:"binary_lopreand"`
@@ -98,10 +88,6 @@ var _ = Expr(NewBinary(NewLiteral(1), token.NewToken(token.DIV, "/", nil, 1), Ne
 // 1 > 2
 var _ = Expr(NewBinary(NewLiteral(1), token.NewToken(token.GTR, ">", nil, 1), NewLiteral(2)))
 
-// <<<<<<<<<<<<<<<<<<<< binary expression <<<<<<<<<<<<<<<<<<<<
-
-// >>>>>>>>>>>>>>>>>>>> group expression >>>>>>>>>>>>>>>>>>>>
-
 type Group struct {
 	Expression Expr `json:"group_expression"`
 }
@@ -117,10 +103,6 @@ func NewGroup(expression Expr) *Group {
 // (-1.25)
 var _ = Expr(NewGroup(NewUnary(token.NewToken(token.SUB, "-", nil, 1), NewLiteral(1.25))))
 
-// <<<<<<<<<<<<<<<<<<<< group expression <<<<<<<<<<<<<<<<<<<<
-
-// >>>>>>>>>>>>>>>>>>>> variable expression >>>>>>>>>>>>>>>>>>>>
-
 type Variable struct {
 	Name token.Token `json:"variable_name"`
 }
@@ -135,10 +117,6 @@ func NewVariable(name token.Token) *Variable {
 
 // a_variable
 var _ = Expr(NewVariable(token.NewToken(token.IDE, "a_variable", nil, 1)))
-
-// <<<<<<<<<<<<<<<<<<<< variable expression <<<<<<<<<<<<<<<<<<<<
-
-// >>>>>>>>>>>>>>>>>>>> assign expression >>>>>>>>>>>>>>>>>>>>
 
 type Assign struct {
 	Name  token.Token `json:"assign_name"`
@@ -158,10 +136,6 @@ func NewAssign(name token.Token, value Expr) *Assign {
 
 // a = 5
 var _ = Expr(NewAssign(token.NewToken(token.IDE, "a", nil, 1), NewLiteral(5)))
-
-// <<<<<<<<<<<<<<<<<<<< assign expression <<<<<<<<<<<<<<<<<<<<
-
-// >>>>>>>>>>>>>>>>>>>> logical expression >>>>>>>>>>>>>>>>>>>>
 
 type Logical struct {
 	Lopreand Expr        `json:"logical_lopreand"`
@@ -188,10 +162,6 @@ var _ = Expr(NewLogical(
 	Expr(NewBinary(NewLiteral(7), token.NewToken(token.NEQ, "!=", nil, 1), NewLiteral(8))),
 ))
 
-// <<<<<<<<<<<<<<<<<<<< logical expression <<<<<<<<<<<<<<<<<<<<
-
-// >>>>>>>>>>>>>>>>>>>> call expression >>>>>>>>>>>>>>>>>>>>
-
 type Call struct {
 	Callee    Expr        `json:"callee"`
 	Paren     token.Token `json:"parenthesis"`
@@ -211,5 +181,3 @@ func NewCall(callee Expr, paren token.Token, arguments []Expr) *Call {
 		Arguments: args,
 	}
 }
-
-// <<<<<<<<<<<<<<<<<<<< call expression <<<<<<<<<<<<<<<<<<<<

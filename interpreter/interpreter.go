@@ -34,8 +34,6 @@ func (d *date) String() string {
 	return "<native fn date>"
 }
 
-/******************** the date builtin function ********************/
-
 /******************** the clock builtin function ********************/
 
 type clock struct{}
@@ -52,8 +50,6 @@ func (c *clock) call(interpreter *Interpreter, arguments []any) any {
 func (c *clock) String() string {
 	return "<native fn clock>"
 }
-
-/******************** the clock builtin function ********************/
 
 type Interpreter struct {
 	env *environment
@@ -112,12 +108,12 @@ func isTruthy(a any) bool {
 	return true
 }
 
+// E1 op E2
+// op -> '+' | '-' | '*' | '/' | '>' | '>=' | '<' | '<=' | '==' | '!='
 func (i *Interpreter) VisitorBinaryExpr(b *parser.Binary) any {
-	// binary expression like `1+2` `2*3` `4/5` `2>1` `3==4` `true!=false` ...
 	lopreand := i.eval(b.Lopreand)
 	roperand := i.eval(b.Ropreand)
 	switch b.Operator.Ttype {
-	// +
 	case token.ADD:
 		lf, okl := lopreand.(float64)
 		rf, okr := roperand.(float64)
@@ -129,28 +125,25 @@ func (i *Interpreter) VisitorBinaryExpr(b *parser.Binary) any {
 		if okl && okr {
 			return ls + rs
 		}
-	// -
+		panic("the binary operator '+' can only be used for numbers or strings")
 	case token.SUB:
 		lf, okl := lopreand.(float64)
 		rf, okr := roperand.(float64)
 		if okl && okr {
 			return lf - rf
 		}
-	// *
 	case token.MUL:
 		lf, okl := lopreand.(float64)
 		rf, okr := roperand.(float64)
 		if okl && okr {
 			return lf * rf
 		}
-	// /
 	case token.DIV:
 		lf, okl := lopreand.(float64)
 		rf, okr := roperand.(float64)
 		if okl && okr {
 			return lf / rf
 		}
-	// >
 	case token.GTR:
 		lf, okl := lopreand.(float64)
 		rf, okr := roperand.(float64)
@@ -162,7 +155,6 @@ func (i *Interpreter) VisitorBinaryExpr(b *parser.Binary) any {
 		if okl && okr {
 			return ls > rs
 		}
-	// >=
 	case token.GEQ:
 		lf, okl := lopreand.(float64)
 		rf, okr := roperand.(float64)
@@ -174,7 +166,6 @@ func (i *Interpreter) VisitorBinaryExpr(b *parser.Binary) any {
 		if okl && okr {
 			return ls >= rs
 		}
-	// <
 	case token.LSS:
 		lf, okl := lopreand.(float64)
 		rf, okr := roperand.(float64)
@@ -186,7 +177,6 @@ func (i *Interpreter) VisitorBinaryExpr(b *parser.Binary) any {
 		if okl && okr {
 			return ls < rs
 		}
-	// <=
 	case token.LEQ:
 		lf, okl := lopreand.(float64)
 		rf, okr := roperand.(float64)
@@ -198,10 +188,8 @@ func (i *Interpreter) VisitorBinaryExpr(b *parser.Binary) any {
 		if okl && okr {
 			return ls <= rs
 		}
-	// ==
 	case token.EQL:
 		return isEqual(lopreand, roperand)
-	// !=
 	case token.NEQ:
 		return !isEqual(lopreand, roperand)
 	}
@@ -219,18 +207,15 @@ func isEqual(a, b any) bool {
 }
 
 func (i *Interpreter) VisitorGroupExpr(g *parser.Group) any {
-	// group expression like `(1)` `(1+2)` `(1!=2)` ...
-	// We evaluate its expression.
+	// For group expression, simply evaluating its expression field.
 	return i.eval(g.Expression)
 }
 
 func (i *Interpreter) VisitorVariableExpr(v *parser.Variable) any {
-	// variable expression like `a` `ans` `s` `res` ...
 	return i.env.get(v.Name)
 }
 
 func (i *Interpreter) VisitorAssignExpr(a *parser.Assign) any {
-	// assign expression like `a = 2` `a = b = true` ...
 	value := i.eval(a.Value)
 	i.env.asg(a.Name, value)
 	return value
@@ -258,18 +243,16 @@ func (i *Interpreter) VisitorCallExpr(c *parser.Call) any {
 		arguments = append(arguments, i.eval(argument))
 	}
 	function, ok := callee.(LoxCallable)
-	// Make sure callee is callable.
+	// make sure the callee is callable
 	if !ok {
 		panic("can only call functions and classes")
 	}
-	// Check amount of parameters.
+	// arity checking
 	if len(arguments) != function.arity() {
 		panic("expected " + strconv.Itoa(function.arity()) + " arguments" + " but got " + strconv.Itoa(len(arguments)))
 	}
 	return function.call(i, arguments)
 }
-
-/********** The implementation of the ExprVisitor interface **********/
 
 // executing statement
 func (i *Interpreter) exec(stmt parser.Stmt) {
@@ -339,9 +322,13 @@ func (i *Interpreter) VisitorWhileStmt(w *parser.While) any {
 }
 
 func (i *Interpreter) VisitorFunctionStmt(f *parser.Function) any {
-	function := NewLoxFunction(f)
+	function := NewLoxFunction(f, i.env)
 	i.env.def(f.Name.Lexeme, function)
 	return nil
+}
+
+type Return struct {
+	returnValue any
 }
 
 func (i *Interpreter) VisitorReturnStmt(r *parser.Return) any {
@@ -349,7 +336,5 @@ func (i *Interpreter) VisitorReturnStmt(r *parser.Return) any {
 	if r.Value != nil {
 		value = i.eval(r.Value)
 	}
-	panic(value)
+	panic(Return{returnValue: value})
 }
-
-/********** The implementation of the StmtVisitor interface **********/

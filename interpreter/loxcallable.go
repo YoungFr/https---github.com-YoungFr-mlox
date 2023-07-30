@@ -11,6 +11,7 @@ type LoxCallable interface {
 
 type LoxFunction struct {
 	declaration *parser.Function
+	closure     *environment
 }
 
 func (lf *LoxFunction) arity() int {
@@ -19,11 +20,11 @@ func (lf *LoxFunction) arity() int {
 
 func (lf *LoxFunction) call(interpreter *Interpreter, arguments []any) (returnValue any) {
 	defer func() {
-		if r := recover(); r != nil {
-			returnValue = r
+		if r, ok := recover().(Return); ok {
+			returnValue = r.returnValue
 		}
 	}()
-	env := NewEnvironment(globals)
+	env := NewEnvironment(lf.closure)
 	for i := 0; i < len(lf.declaration.Params); i++ {
 		env.def(lf.declaration.Params[i].Lexeme, arguments[i])
 	}
@@ -35,8 +36,9 @@ func (lf *LoxFunction) String() string {
 	return "<fn " + lf.declaration.Name.Lexeme + ">"
 }
 
-func NewLoxFunction(declaration *parser.Function) *LoxFunction {
+func NewLoxFunction(declaration *parser.Function, closure *environment) *LoxFunction {
 	return &LoxFunction{
 		declaration: declaration,
+		closure:     closure,
 	}
 }

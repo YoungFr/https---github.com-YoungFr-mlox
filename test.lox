@@ -96,17 +96,23 @@ print date;
 print clock();
 print clock;
 
-fun fib(n) {
-    if (n <= 2) return 1;
-    return fib(n-1) + fib(n-2);
+fun echo(n) {
+    print n;
 }
 
-for (var i = 1; i <= 20; i = i+1) {
-    print fib(i);
+fun f() {
+    return 1;
 }
 
-fun add(a, b) {
-    return a + b;
+echo(88888);
+
+fun makeCounter() {
+    var i = 0;
+    fun counter() {
+        i = i + 1;
+        print i;
+    }
+    return counter;
 }
 
-print add(1, 1);
+makeCounter()();
